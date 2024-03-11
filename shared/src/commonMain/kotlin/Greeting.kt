@@ -2,6 +2,8 @@ class Greeting {
     private val platform = getPlatform()
 
     fun greet(): String {
-        return "Hello, It's KMP Sample!"
+        return "Hello, ${platform.name}"
     }
+
+    fun getNames() = platform.names
 }
