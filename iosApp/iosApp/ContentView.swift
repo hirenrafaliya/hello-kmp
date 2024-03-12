@@ -3,37 +3,43 @@ import Shared
 
 struct ContentView: View {
     @State private var showContent = ""
-    @State private var viewModel = ChatRoomViewModel()
+    @ObservedObject private var viewModel = MainScreenModel()
     var body: some View {
             NavigationStack {
-                Text("Hello \(viewModel.messages.count) \(showContent)")
-                Button("Button title") {
-                    showContent = viewModel.messages.first ?? "nil"
+                List(viewModel.counter, id: \.self) { val in
+                    Text("Counter -> \(val)")
+                }
+                    .animation(.easeInOut(duration: 1000), value: viewModel.counter)
+                Button("Increase Counter") {
+                    viewModel.increase()
                 }
 
                     .navigationTitle("Better rest")
             }.task {
-                await viewModel.activate()
-
+                await viewModel.collect()
             }
     }
 }
 
-class ChatRoomViewModel: ObservableObject {
-    let chatRoom = ChatRoom()
+@MainActor
+class MainScreenModel: ObservableObject {
+    let viewModel = MainViewModel()
 
     @Published
-    private(set) var messages: [String] = []
+    var counter: [String] = [" -- "]
 
     @MainActor
-    func activate() async {
-        Task.detached {
-            try? await self.chatRoom.add()
+    func collect() async {
+        Task {
+            for await counter in viewModel.counter {
+                self.counter.append(counter)
+            }
         }
-        for await messages in chatRoom.messages {
-            // No type cast (eg `it as! [String]`) is needed because the generic type is preserved.
-            self.messages = messages
-            print(messages)
+    }
+
+    func increase() {
+        Task {
+            try? await viewModel.increase()
         }
     }
 }
