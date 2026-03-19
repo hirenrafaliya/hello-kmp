@@ -1,0 +1,2759 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lumiq</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&family=DM+Serif+Display:ital@0;1&family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&family=Fraunces:ital,wght@0,300;0,500;1,300;1,500&family=Epilogue:wght@300;400;500&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Sora:wght@300;400;500;600&family=Crimson+Pro:ital,wght@0,300;0,400;1,300;1,400&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ── Reset ── */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+      }
+
+      /* ── Design tokens (Midnight default) ── */
+      :root {
+        --bg: #08080c;
+        --bg2: #0f0f14;
+        --bg3: #141419;
+        --bg4: #1a1a22;
+        --surface: #1f1f28;
+        --surface2: #262632;
+        --surface3: #2d2d3a;
+        --border: rgba(255, 255, 255, 0.055);
+        --border2: rgba(255, 255, 255, 0.1);
+        --border3: rgba(255, 255, 255, 0.16);
+        --text: #eeeef5;
+        --text2: #8888a8;
+        --text3: #44445a;
+        --accent: #5b5bd6;
+        --accent-l: #7b7bec;
+        --accent-ll: #a5a5f5;
+        --accent-glow: rgba(91, 91, 214, 0.18);
+        --green: #3dd68c;
+        --amber: #f5a623;
+        --coral: #f06292;
+        --cyan: #38bdf8;
+        --msg-user-bg: rgba(91, 91, 214, 0.16);
+        --msg-user-border: rgba(91, 91, 214, 0.28);
+        --msg-ai-bg: #141419;
+        --msg-ai-border: rgba(255, 255, 255, 0.07);
+        --font-display: "Instrument Serif", Georgia, serif;
+        --font-body: "Geist", sans-serif;
+        --font-mono: "Geist Mono", monospace;
+        --font-chat: "Geist", sans-serif;
+        --font-weight-body: 300;
+        --r: 14px;
+        --r-lg: 20px;
+        --r-xl: 28px;
+      }
+
+      /* ── App shell ── */
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font-body);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .app {
+        width: 393px;
+        height: 100vh;
+        max-height: 852px;
+        background: var(--bg);
+        border-radius: 0;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        border-left: 1px solid rgba(255, 255, 255, 0.06);
+        border-right: 1px solid rgba(255, 255, 255, 0.06);
+      }
+      @media (min-width: 450px) {
+        .app {
+          height: 852px;
+          border-radius: 48px;
+          border: 1.5px solid rgba(255, 255, 255, 0.08);
+          box-shadow:
+            0 60px 120px rgba(0, 0, 0, 0.85),
+            0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+          margin: 20px auto;
+        }
+      }
+
+      /* Ambient glow */
+      .app::before {
+        content: "";
+        position: absolute;
+        top: -60px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 240px;
+        height: 240px;
+        background: radial-gradient(
+          ellipse,
+          var(--accent-glow) 0%,
+          transparent 70%
+        );
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      /* ── Status bar ── */
+      .statusbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 26px 0;
+        z-index: 10;
+        flex-shrink: 0;
+        position: relative;
+      }
+      .sb-time {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text);
+      }
+      .sb-icons {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        opacity: 0.8;
+      }
+
+      /* ── Top brand bar ── */
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 20px 0;
+        position: relative;
+        z-index: 10;
+        flex-shrink: 0;
+      }
+      .brand-inline {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .brand-icon {
+        width: 28px;
+        height: 28px;
+        background: linear-gradient(135deg, var(--accent), #8b5cf6);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .brand-name {
+        font-family: var(--font-display);
+        font-size: 19px;
+        color: var(--text);
+        letter-spacing: -0.01em;
+      }
+      .theme-pill-tab {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 11px;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.04em;
+        color: var(--text2);
+        background: var(--surface);
+        border: 1px solid var(--border2);
+      }
+      .theme-pill-tab:hover {
+        color: var(--text);
+        border-color: var(--border3);
+      }
+      .theme-pip {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent-l), var(--cyan));
+        transition: background 0.3s;
+      }
+
+      /* ── Pages ── */
+      .page {
+        display: none;
+        flex: 1;
+        flex-direction: column;
+        overflow: hidden;
+        min-height: 0;
+      }
+      .page.active {
+        display: flex;
+      }
+
+      /* ═══ HOME PAGE ═══ */
+      .scroll-body {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        scrollbar-width: none;
+        padding-bottom: 16px;
+        position: relative;
+        z-index: 5;
+      }
+      .scroll-body::-webkit-scrollbar {
+        display: none;
+      }
+
+      .hero {
+        padding: 20px 22px 0;
+      }
+      .hero-eyebrow {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text3);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .el {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
+      .hero-heading {
+        font-family: var(--font-display);
+        font-size: 29px;
+        line-height: 1.15;
+        color: var(--text);
+        letter-spacing: -0.01em;
+        margin-bottom: 5px;
+      }
+      .hero-heading em {
+        font-style: italic;
+        color: var(--accent-ll);
+      }
+      .hero-sub {
+        font-size: 13px;
+        font-weight: var(--font-weight-body);
+        color: var(--text2);
+        line-height: 1.55;
+        font-family: var(--font-body);
+      }
+
+      .search-wrap {
+        padding: 16px 22px 0;
+      }
+      .search-box {
+        background: var(--bg3);
+        border: 1px solid var(--border2);
+        border-radius: var(--r-xl);
+        padding: 12px 12px 12px 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: text;
+        transition: all 0.22s;
+      }
+      .search-box:hover,
+      .search-box:focus-within {
+        border-color: rgba(91, 91, 214, 0.5);
+        box-shadow: 0 0 0 3px var(--accent-glow);
+      }
+      .search-ico {
+        width: 17px;
+        height: 17px;
+        color: var(--text3);
+        flex-shrink: 0;
+      }
+      .search-input {
+        flex: 1;
+        background: none;
+        border: none;
+        outline: none;
+        font-family: var(--font-chat);
+        font-size: 14px;
+        font-weight: var(--font-weight-body);
+        color: var(--text);
+        caret-color: var(--accent-l);
+      }
+      .search-input::placeholder {
+        color: var(--text3);
+      }
+      .s-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--border2);
+        background: var(--surface);
+        cursor: pointer;
+        transition: all 0.18s;
+        color: var(--text2);
+        flex-shrink: 0;
+      }
+      .s-btn:hover {
+        background: var(--surface2);
+        color: var(--text);
+      }
+      .s-btn.mic {
+        background: rgba(91, 91, 214, 0.14);
+        border-color: rgba(91, 91, 214, 0.3);
+        color: var(--accent-ll);
+      }
+      .s-btn.go {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+        width: 32px;
+        height: 32px;
+      }
+      .s-btn.go:hover {
+        background: var(--accent-l);
+      }
+
+      .chips-section {
+        padding: 12px 22px 0;
+      }
+      .chips-scroll {
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        padding-bottom: 2px;
+      }
+      .chips-scroll::-webkit-scrollbar {
+        display: none;
+      }
+      .chip {
+        flex-shrink: 0;
+        background: var(--bg3);
+        border: 1px solid var(--border2);
+        border-radius: 20px;
+        padding: 6px 12px;
+        font-size: 12px;
+        color: var(--text2);
+        cursor: pointer;
+        transition: all 0.18s;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-family: var(--font-body);
+      }
+      .chip:hover {
+        background: var(--surface);
+        color: var(--text);
+        border-color: var(--border3);
+      }
+      .chip.hot {
+        background: rgba(91, 91, 214, 0.1);
+        border-color: rgba(91, 91, 214, 0.28);
+        color: var(--accent-ll);
+      }
+
+      .sec-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 22px 10px;
+      }
+      .sec-label {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 500;
+        color: var(--text3);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      .sec-more {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--accent-l);
+        cursor: pointer;
+      }
+
+      /* Answer preview card */
+      .answer-card {
+        margin: 0 22px;
+        background: linear-gradient(
+          145deg,
+          rgba(91, 91, 214, 0.09),
+          rgba(56, 189, 248, 0.04)
+        );
+        border: 1px solid rgba(91, 91, 214, 0.2);
+        border-radius: var(--r-lg);
+        padding: 15px;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+        transition: all 0.22s;
+      }
+      .answer-card:hover {
+        border-color: rgba(91, 91, 214, 0.35);
+        box-shadow: 0 8px 32px rgba(91, 91, 214, 0.1);
+      }
+      .answer-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(91, 91, 214, 0.5),
+          transparent
+        );
+      }
+      .ac-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-family: var(--font-mono);
+        font-size: 9px;
+        color: var(--accent-ll);
+        letter-spacing: 0.1em;
+        margin-bottom: 8px;
+      }
+      .pulse {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--green);
+        animation: pulse 2s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.5;
+          transform: scale(0.85);
+        }
+      }
+      .ac-q {
+        font-family: var(--font-display);
+        font-size: 14.5px;
+        color: var(--text);
+        line-height: 1.3;
+        margin-bottom: 7px;
+        letter-spacing: -0.01em;
+      }
+      .ac-ans {
+        font-size: 12.5px;
+        font-weight: var(--font-weight-body);
+        color: var(--text2);
+        line-height: 1.6;
+        margin-bottom: 11px;
+        font-family: var(--font-body);
+      }
+      .ac-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .src-dots {
+        display: flex;
+        align-items: center;
+      }
+      .src-dot {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 1.5px solid var(--bg3);
+        font-size: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: -5px;
+      }
+      .src-dot:first-child {
+        margin-left: 0;
+      }
+      .src-lbl {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        color: var(--text3);
+        margin-left: 7px;
+        letter-spacing: 0.04em;
+      }
+      .ac-cta {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--accent-l);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      /* Image carousel */
+      .carousel-wrap {
+        padding: 0 0 0 22px;
+      }
+      .carousel-scroll {
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        padding-right: 22px;
+        padding-bottom: 4px;
+      }
+      .carousel-scroll::-webkit-scrollbar {
+        display: none;
+      }
+      .img-card {
+        flex-shrink: 0;
+        width: 172px;
+        border-radius: var(--r-lg);
+        overflow: hidden;
+        position: relative;
+        cursor: pointer;
+        border: 1px solid var(--border);
+        transition: all 0.22s;
+      }
+      .img-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+        border-color: var(--border2);
+      }
+      .img-thumb {
+        width: 100%;
+        height: 108px;
+        display: block;
+        position: relative;
+        overflow: hidden;
+      }
+      .img-thumb::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          to bottom,
+          transparent 40%,
+          rgba(0, 0, 0, 0.55) 100%
+        );
+      }
+      .g1 {
+        background: linear-gradient(135deg, #1a1040, #2d1b69, #0d3b72);
+      }
+      .g2 {
+        background: linear-gradient(135deg, #0d2015, #0f4030, #1a5545);
+      }
+      .g3 {
+        background: linear-gradient(135deg, #2d0a0a, #5c1a1a, #7a2020);
+      }
+      .g4 {
+        background: linear-gradient(135deg, #0a1a2d, #0f3050, #1a4a6a);
+      }
+      .g5 {
+        background: linear-gradient(135deg, #1a0d2d, #3d1a5c, #5c2080);
+      }
+      .img-icon {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 26px;
+        opacity: 0.4;
+        z-index: 1;
+      }
+      .img-badge {
+        position: absolute;
+        top: 7px;
+        right: 7px;
+        z-index: 2;
+        font-family: var(--font-mono);
+        font-size: 8px;
+        letter-spacing: 0.06em;
+        border-radius: 5px;
+        padding: 2px 6px;
+        backdrop-filter: blur(8px);
+      }
+      .img-meta {
+        padding: 9px 11px 11px;
+        background: var(--bg3);
+      }
+      .img-src {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        color: var(--accent-l);
+        letter-spacing: 0.05em;
+        margin-bottom: 3px;
+      }
+      .img-cap {
+        font-size: 11px;
+        color: var(--text2);
+        line-height: 1.35;
+        font-family: var(--font-body);
+      }
+
+      /* Stat strip */
+      .stat-strip {
+        margin: 0 22px;
+        background: var(--bg3);
+        border: 1px solid var(--border);
+        border-radius: var(--r-lg);
+        padding: 13px 16px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .s-sep {
+        border-right: 1px solid var(--border);
+      }
+      .s-item {
+        text-align: center;
+        padding: 0 8px;
+      }
+      .s-n {
+        font-family: var(--font-display);
+        font-size: 20px;
+        color: var(--text);
+        letter-spacing: -0.02em;
+        line-height: 1;
+        margin-bottom: 2px;
+      }
+      .s-n span {
+        font-size: 11px;
+        color: var(--accent-l);
+      }
+      .s-l {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        color: var(--text3);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      /* Recent chats list */
+      .chat-list {
+        padding: 0 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+      }
+      .chat-item {
+        background: var(--bg3);
+        border: 1px solid var(--border);
+        border-radius: var(--r-lg);
+        padding: 12px 13px;
+        cursor: pointer;
+        transition: all 0.18s;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .chat-item:hover {
+        background: var(--surface);
+        border-color: var(--border2);
+        transform: translateX(2px);
+      }
+      .ci-ico {
+        width: 30px;
+        height: 30px;
+        border-radius: 9px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+      }
+      .ci-body {
+        flex: 1;
+        min-width: 0;
+      }
+      .ci-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 3px;
+      }
+      .ci-title {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text);
+        letter-spacing: -0.01em;
+        font-family: var(--font-body);
+      }
+      .ci-time {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        color: var(--text3);
+      }
+      .ci-prev {
+        font-size: 11.5px;
+        font-weight: var(--font-weight-body);
+        color: var(--text2);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-family: var(--font-body);
+      }
+      .ci-tags {
+        display: flex;
+        gap: 5px;
+        margin-top: 6px;
+      }
+      .ci-tag {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        letter-spacing: 0.05em;
+        border-radius: 5px;
+        padding: 2px 7px;
+      }
+
+      /* Topics grid */
+      .topics-grid {
+        padding: 0 22px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .topic-card {
+        background: var(--bg3);
+        border: 1px solid var(--border);
+        border-radius: var(--r);
+        padding: 12px;
+        cursor: pointer;
+        transition: all 0.18s;
+      }
+      .topic-card:hover {
+        background: var(--surface);
+        border-color: var(--border2);
+        transform: translateY(-1px);
+      }
+      .tc-ico {
+        font-size: 17px;
+        margin-bottom: 6px;
+        display: block;
+      }
+      .tc-lbl {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        color: var(--text3);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-bottom: 3px;
+      }
+      .tc-title {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text);
+        line-height: 1.35;
+        font-family: var(--font-body);
+      }
+      .tc-meta {
+        font-size: 10.5px;
+        color: var(--text3);
+        margin-top: 4px;
+        font-family: var(--font-body);
+      }
+
+      /* ═══ CHAT PAGE ═══ */
+      .chat-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 20px 12px;
+        flex-shrink: 0;
+        border-bottom: 1px solid var(--border);
+        position: relative;
+        z-index: 10;
+      }
+      .chat-header-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .chat-model-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--green);
+        box-shadow: 0 0 6px var(--green);
+      }
+      .chat-title-text {
+        font-family: var(--font-display);
+        font-size: 17px;
+        color: var(--text);
+      }
+      .chat-sub {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        color: var(--text3);
+        margin-top: 1px;
+        letter-spacing: 0.06em;
+      }
+      .new-btn {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        background: var(--surface2);
+        border: 1px solid var(--border2);
+        border-radius: 20px;
+        padding: 7px 13px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text2);
+        cursor: pointer;
+        transition: all 0.18s;
+        letter-spacing: 0.04em;
+      }
+      .new-btn:hover {
+        background: var(--surface3);
+        color: var(--text);
+      }
+
+      /* Messages area */
+      .messages {
+        flex: 1;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: var(--border2) transparent;
+        padding: 16px 16px 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        min-height: 0;
+      }
+      .messages::-webkit-scrollbar {
+        width: 3px;
+      }
+      .messages::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .messages::-webkit-scrollbar-thumb {
+        background: var(--border2);
+        border-radius: 2px;
+      }
+
+      /* Day divider */
+      .day-div {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-family: var(--font-mono);
+        font-size: 9px;
+        color: var(--text3);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin: 8px 0 16px;
+      }
+      .dl {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
+
+      /* Message groups — correct ordering */
+      .msg-group {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 4px;
+      }
+      .msg-group.user {
+        align-items: flex-end;
+      }
+      .msg-group.ai {
+        align-items: flex-start;
+      }
+
+      .msg-row {
+        display: flex;
+        align-items: flex-end;
+        gap: 8px;
+        max-width: 88%;
+      }
+      .msg-group.user .msg-row {
+        flex-direction: row-reverse;
+      }
+      .msg-group.ai .msg-row {
+        flex-direction: row;
+      }
+
+      .ai-av {
+        width: 26px;
+        height: 26px;
+        border-radius: 8px;
+        flex-shrink: 0;
+        background: linear-gradient(135deg, var(--accent), #8b5cf6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 2px;
+        align-self: flex-end;
+      }
+
+      .bubble {
+        padding: 10px 14px;
+        border-radius: 18px;
+        font-family: var(--font-chat);
+        font-size: 13.5px;
+        line-height: 1.58;
+        font-weight: var(--font-weight-body);
+        transition:
+          background 0.3s,
+          border-color 0.3s;
+        word-break: break-word;
+      }
+      .bubble.user {
+        background: var(--msg-user-bg);
+        border: 1px solid var(--msg-user-border);
+        color: var(--text);
+        border-radius: 18px 4px 18px 18px;
+      }
+      .bubble.ai {
+        background: var(--msg-ai-bg);
+        border: 1px solid var(--msg-ai-border);
+        color: var(--text);
+        border-radius: 4px 18px 18px 18px;
+      }
+
+      /* Rich AI bubble extras */
+      .b-label {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        color: var(--accent-ll);
+        letter-spacing: 0.1em;
+        margin-bottom: 7px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .b-body {
+        font-size: 13px;
+        color: var(--text);
+        line-height: 1.62;
+        font-family: var(--font-chat);
+      }
+      .b-body strong {
+        font-weight: 600;
+        color: var(--text);
+      }
+
+      /* Inline stat cards in bubble */
+      .b-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+        margin: 10px 0;
+      }
+      .b-stat {
+        background: var(--surface);
+        border: 1px solid var(--border2);
+        border-radius: 10px;
+        padding: 8px 5px;
+        text-align: center;
+      }
+      .b-sn {
+        font-family: var(--font-display);
+        font-size: 15px;
+        color: var(--text);
+        line-height: 1;
+        margin-bottom: 2px;
+      }
+      .b-sl {
+        font-family: var(--font-mono);
+        font-size: 8px;
+        color: var(--text3);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      /* Inline image strip */
+      .b-imgs {
+        display: flex;
+        gap: 6px;
+        margin: 10px 0;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+      .b-imgs::-webkit-scrollbar {
+        display: none;
+      }
+      .b-img {
+        flex-shrink: 0;
+        width: 90px;
+        height: 62px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        border: 1px solid var(--border);
+      }
+
+      /* Sources */
+      .b-srcs {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+      .b-src {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        background: var(--surface);
+        border: 1px solid var(--border2);
+        border-radius: 20px;
+        padding: 4px 9px;
+        font-family: var(--font-mono);
+        font-size: 9px;
+        color: var(--accent-l);
+        letter-spacing: 0.04em;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .b-src:hover {
+        background: var(--surface2);
+      }
+      .b-sdot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+      }
+
+      /* Follow-up chips */
+      .followups {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        margin-top: 10px;
+      }
+      .fup {
+        background: var(--surface);
+        border: 1px solid var(--border2);
+        border-radius: 10px;
+        padding: 8px 11px;
+        font-size: 12px;
+        color: var(--text2);
+        cursor: pointer;
+        transition: all 0.18s;
+        font-family: var(--font-chat);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .fup:hover {
+        background: var(--surface2);
+        color: var(--text);
+      }
+      .fup-arr {
+        color: var(--accent-l);
+        font-size: 12px;
+      }
+
+      /* Typing dots */
+      .typing {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 4px;
+      }
+      .t-dots {
+        padding: 10px 14px;
+        background: var(--msg-ai-bg);
+        border: 1px solid var(--msg-ai-border);
+        border-radius: 4px 18px 18px 18px;
+        display: flex;
+        gap: 4px;
+      }
+      .td {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--text3);
+        animation: tdot 1.2s ease-in-out infinite;
+      }
+      .td:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .td:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+      @keyframes tdot {
+        0%,
+        60%,
+        100% {
+          transform: translateY(0);
+        }
+        30% {
+          transform: translateY(-5px);
+        }
+      }
+
+      /* Timestamp */
+      .msg-ts {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        color: var(--text3);
+        margin: 2px 0 12px;
+        padding: 0 2px;
+      }
+      .msg-group.user .msg-ts {
+        text-align: right;
+      }
+      .msg-group.ai .msg-ts {
+        text-align: left;
+        padding-left: 34px;
+      }
+
+      /* Streaming cursor */
+      .stream-cursor {
+        display: inline-block;
+        width: 2px;
+        height: 14px;
+        background: var(--accent-l);
+        border-radius: 1px;
+        animation: blink 0.9s ease infinite;
+        vertical-align: middle;
+        margin-left: 2px;
+      }
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0;
+        }
+      }
+
+      /* ── Chat input ── */
+      .chat-input-area {
+        padding: 10px 14px 18px;
+        flex-shrink: 0;
+        border-top: 1px solid var(--border);
+        background: var(--bg2);
+      }
+      .chat-input-box {
+        display: flex;
+        align-items: flex-end;
+        gap: 8px;
+        background: var(--bg3);
+        border: 1px solid var(--border2);
+        border-radius: 22px;
+        padding: 10px 10px 10px 14px;
+        transition: all 0.22s;
+      }
+      .chat-input-box:focus-within {
+        border-color: rgba(91, 91, 214, 0.5);
+        box-shadow: 0 0 0 3px var(--accent-glow);
+      }
+      .ci-input {
+        flex: 1;
+        background: none;
+        border: none;
+        outline: none;
+        resize: none;
+        font-family: var(--font-chat);
+        font-size: 14px;
+        font-weight: var(--font-weight-body);
+        color: var(--text);
+        caret-color: var(--accent-l);
+        max-height: 120px;
+        min-height: 22px;
+        line-height: 1.5;
+        scrollbar-width: none;
+      }
+      .ci-input::-webkit-scrollbar {
+        display: none;
+      }
+      .ci-input::placeholder {
+        color: var(--text3);
+      }
+      .ci-actions {
+        display: flex;
+        gap: 6px;
+        align-items: flex-end;
+        padding-bottom: 1px;
+      }
+      .ci-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--border2);
+        background: var(--surface);
+        cursor: pointer;
+        transition: all 0.18s;
+        color: var(--text2);
+        flex-shrink: 0;
+      }
+      .ci-btn:hover {
+        background: var(--surface2);
+        color: var(--text);
+      }
+      .ci-btn.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+      .ci-btn.active:hover {
+        background: var(--accent-l);
+      }
+      .ci-hint {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        color: var(--text3);
+        text-align: center;
+        margin-top: 8px;
+        letter-spacing: 0.04em;
+      }
+
+      /* ── Placeholder pages ── */
+      .placeholder-page {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 40px;
+        opacity: 0.35;
+      }
+      .ph-icon {
+        font-size: 36px;
+        margin-bottom: 4px;
+      }
+      .ph-title {
+        font-family: var(--font-display);
+        font-size: 19px;
+        color: var(--text);
+        font-style: italic;
+      }
+      .ph-sub {
+        font-family: var(--font-body);
+        font-size: 12.5px;
+        color: var(--text2);
+        text-align: center;
+        line-height: 1.5;
+      }
+
+      /* ── Bottom nav ── */
+      .bottomnav {
+        background: rgba(8, 8, 12, 0.97);
+        border-top: 1px solid var(--border);
+        padding: 10px 8px 24px;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        flex-shrink: 0;
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        position: relative;
+        z-index: 50;
+      }
+      .nav-i {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+        opacity: 0.35;
+        transition: all 0.18s;
+        padding: 5px 16px;
+        border-radius: 12px;
+      }
+      .nav-i.on {
+        opacity: 1;
+        background: rgba(91, 91, 214, 0.1);
+      }
+      .nav-i:hover:not(.on) {
+        opacity: 0.6;
+      }
+      .nav-ico {
+        width: 20px;
+        height: 20px;
+        color: var(--text2);
+      }
+      .nav-i.on .nav-ico {
+        color: var(--accent-ll);
+      }
+      .nav-txt {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        color: var(--text3);
+        letter-spacing: 0.06em;
+      }
+      .nav-i.on .nav-txt {
+        color: var(--accent-ll);
+      }
+
+      /* ── Theme overlay ── */
+      .overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.78);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        z-index: 200;
+        display: flex;
+        align-items: flex-end;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.28s;
+      }
+      .overlay.open {
+        opacity: 1;
+        pointer-events: all;
+      }
+      .sheet {
+        width: 100%;
+        background: var(--bg2);
+        border-top: 1px solid var(--border2);
+        border-radius: 28px 28px 0 0;
+        padding: 10px 20px 36px;
+        transform: translateY(24px);
+        transition: transform 0.35s cubic-bezier(0.32, 1.4, 0.64, 1);
+      }
+      .overlay.open .sheet {
+        transform: translateY(0);
+      }
+      .sheet-handle {
+        width: 32px;
+        height: 3px;
+        background: var(--border3);
+        border-radius: 2px;
+        margin: 0 auto 16px;
+      }
+      .sheet-title {
+        font-family: var(--font-display);
+        font-size: 19px;
+        color: var(--text);
+        margin-bottom: 2px;
+      }
+      .sheet-sub {
+        font-size: 12px;
+        color: var(--text3);
+        margin-bottom: 16px;
+        font-family: var(--font-body);
+      }
+      .themes-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+      .th-opt {
+        border-radius: var(--r);
+        padding: 12px 8px 10px;
+        cursor: pointer;
+        border: 1.5px solid transparent;
+        transition: all 0.2s;
+        text-align: center;
+        background: var(--bg3);
+      }
+      .th-opt:hover {
+        transform: translateY(-2px);
+      }
+      .th-opt.sel {
+        border-color: var(--accent);
+      }
+      .th-swatch {
+        width: 40px;
+        height: 40px;
+        border-radius: 11px;
+        margin: 0 auto 7px;
+      }
+      .th-name {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 500;
+        color: var(--text);
+        letter-spacing: 0.02em;
+      }
+      .th-font-name {
+        font-family: var(--font-mono);
+        font-size: 8px;
+        color: var(--text3);
+        margin-top: 1px;
+      }
+      .th-prev {
+        font-size: 10px;
+        color: var(--text2);
+        margin-top: 5px;
+        height: 26px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1.2;
+      }
+      .sheet-close {
+        margin-top: 14px;
+        width: 100%;
+        background: var(--surface2);
+        border: 1px solid var(--border2);
+        border-radius: 14px;
+        padding: 12px;
+        font-family: var(--font-body);
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text2);
+        cursor: pointer;
+        transition: all 0.18s;
+        text-align: center;
+      }
+      .sheet-close:hover {
+        background: var(--surface3);
+        color: var(--text);
+      }
+
+      /* ── Animations ── */
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes msgIn {
+        from {
+          opacity: 0;
+          transform: translateY(6px) scale(0.98);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+      .fu {
+        animation: fadeUp 0.42s ease both;
+      }
+      .fu1 {
+        animation-delay: 0.04s;
+      }
+      .fu2 {
+        animation-delay: 0.09s;
+      }
+      .fu3 {
+        animation-delay: 0.14s;
+      }
+      .fu4 {
+        animation-delay: 0.19s;
+      }
+      .fu5 {
+        animation-delay: 0.24s;
+      }
+      .fu6 {
+        animation-delay: 0.29s;
+      }
+      .fu7 {
+        animation-delay: 0.34s;
+      }
+      .fu8 {
+        animation-delay: 0.4s;
+      }
+      .msg-in {
+        animation: msgIn 0.3s ease both;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app" id="app">
+      <!-- ── Ambient glow bg ── -->
+      <!-- Status bar -->
+      <div class="statusbar">
+        <span class="sb-time" id="clock">9:41</span>
+        <div
+          style="
+            width: 108px;
+            height: 26px;
+            background: var(--bg2);
+            border-radius: 13px;
+            border: 1px solid var(--border);
+          "
+        ></div>
+        <div class="sb-icons">
+          <svg width="15" height="11" viewBox="0 0 15 11" fill="none">
+            <rect
+              x="0"
+              y="2.5"
+              width="2.5"
+              height="8.5"
+              rx="1"
+              fill="white"
+              opacity=".35"
+            />
+            <rect
+              x="4"
+              y="1.5"
+              width="2.5"
+              height="9.5"
+              rx="1"
+              fill="white"
+              opacity=".55"
+            />
+            <rect
+              x="8"
+              y="0"
+              width="2.5"
+              height="11"
+              rx="1"
+              fill="white"
+              opacity=".8"
+            />
+            <rect
+              x="12"
+              y="0"
+              width="2.5"
+              height="11"
+              rx="1"
+              fill="white"
+              opacity=".3"
+            />
+          </svg>
+          <svg width="16" height="11" viewBox="0 0 16 11" fill="none">
+            <path
+              d="M8 2.5C10.3 2.5 12.4 3.5 13.9 5.1L15.2 3.6C13.3 1.5 10.8.2 8 .2 5.2.2 2.7 1.5.8 3.6L2.1 5.1C3.6 3.5 5.7 2.5 8 2.5Z"
+              fill="white"
+              opacity=".45"
+            />
+            <path
+              d="M8 6C9.4 6 10.7 6.6 11.6 7.6L12.9 6.1C11.6 4.7 9.9 3.8 8 3.8 6.1 3.8 4.4 4.7 3.1 6.1L4.4 7.6C5.3 6.6 6.6 6 8 6Z"
+              fill="white"
+              opacity=".7"
+            />
+            <circle cx="8" cy="10" r="1.5" fill="white" />
+          </svg>
+          <svg width="25" height="11" viewBox="0 0 25 12" fill="none">
+            <rect
+              x=".5"
+              y=".5"
+              width="21"
+              height="11"
+              rx="3"
+              stroke="white"
+              opacity=".4"
+            />
+            <rect x="2" y="2" width="16" height="8" rx="1.5" fill="white" />
+            <path
+              d="M23 4V8c.8-.5 1.5-1.2 1.5-2s-.7-1.5-1.5-2Z"
+              fill="white"
+              opacity=".5"
+            />
+          </svg>
+        </div>
+      </div>
+
+      <!-- ── Brand + theme bar ── -->
+      <div class="topbar fu fu1">
+        <div class="brand-inline">
+          <div class="brand-icon">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+              <path
+                d="M8 1.5L13 5V11L8 14.5L3 11V5L8 1.5Z"
+                stroke="white"
+                stroke-width="1.3"
+                fill="none"
+              />
+              <circle cx="8" cy="8" r="2.2" fill="white" />
+            </svg>
+          </div>
+          <span class="brand-name" id="brandName">Lumiq</span>
+        </div>
+        <div class="theme-pill-tab" onclick="openSheet()">
+          <div class="theme-pip" id="themePip"></div>
+          THEME
+        </div>
+      </div>
+
+      <!-- ════ HOME PAGE ════ -->
+      <div class="page active" id="page-home">
+        <div class="scroll-body">
+          <div class="hero fu fu2">
+            <div class="hero-eyebrow">
+              <span class="el"></span>AI Search Reimagined<span
+                class="el"
+              ></span>
+            </div>
+            <div class="hero-heading" id="heroHeading">
+              Ask anything,<br />see <em>everything.</em>
+            </div>
+            <div class="hero-sub">
+              Rich answers with charts, cards &amp; live data — not just text.
+            </div>
+          </div>
+
+          <div class="search-wrap fu fu3">
+            <div class="search-box">
+              <svg
+                class="search-ico"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="m21 21-4.3-4.3" />
+              </svg>
+              <input
+                class="search-input"
+                id="homeSearch"
+                placeholder="Ask me anything…"
+                onkeydown="homeSearchKey(event)"
+              />
+              <div class="s-btn" title="Image">
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <polyline points="21 15 16 10 5 21" />
+                </svg>
+              </div>
+              <div class="s-btn mic">
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                >
+                  <path
+                    d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"
+                  />
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                  <line x1="12" y1="19" x2="12" y2="23" />
+                </svg>
+              </div>
+              <div class="s-btn go" onclick="homeGoSearch()">
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                >
+                  <line x1="22" y1="2" x2="11" y2="13" />
+                  <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="chips-section fu fu3">
+            <div class="chips-scroll">
+              <div class="chip hot" onclick="chipSearch(this)">
+                🔥 Trending now
+              </div>
+              <div class="chip" onclick="chipSearch(this)">
+                🚀 SpaceX Starship
+              </div>
+              <div class="chip" onclick="chipSearch(this)">
+                🤖 GPT-5 release
+              </div>
+              <div class="chip" onclick="chipSearch(this)">
+                💹 Markets today
+              </div>
+              <div class="chip" onclick="chipSearch(this)">
+                🧬 CRISPR therapy
+              </div>
+              <div class="chip" onclick="chipSearch(this)">🌏 Climate 2025</div>
+              <div class="chip" onclick="chipSearch(this)">⚡ EV boom</div>
+            </div>
+          </div>
+
+          <div class="sec-head fu fu4">
+            <span class="sec-label">Latest answer</span
+            ><span class="sec-more">History →</span>
+          </div>
+          <div class="answer-card fu fu4" onclick="switchTab('chat')">
+            <div class="ac-label">
+              <div class="pulse"></div>
+              LIVE · AI ANSWER
+            </div>
+            <div class="ac-q">
+              "What is the current state of SpaceX Starship?"
+            </div>
+            <div class="ac-ans">
+              Flight 9 prep underway — booster catch system upgraded with new
+              hydraulics. Launch window opens late March 2026.
+            </div>
+            <div class="ac-foot">
+              <div style="display: flex; align-items: center">
+                <div class="src-dots">
+                  <div class="src-dot" style="background: #1e3a5f">🌐</div>
+                  <div class="src-dot" style="background: #1a3020">📰</div>
+                  <div class="src-dot" style="background: #2d1a40">🎥</div>
+                </div>
+                <span class="src-lbl">3 SOURCES</span>
+              </div>
+              <div class="ac-cta">
+                View full
+                <svg
+                  width="10"
+                  height="10"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                >
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec-head fu fu5">
+            <span class="sec-label">Visual results</span
+            ><span class="sec-more">See all →</span>
+          </div>
+          <div class="carousel-wrap fu fu5">
+            <div class="carousel-scroll">
+              <div class="img-card">
+                <div class="img-thumb g1"><div class="img-icon">🚀</div></div>
+                <div
+                  class="img-badge"
+                  style="background: rgba(91, 91, 214, 0.75); color: #e0e0ff"
+                >
+                  SPACE
+                </div>
+                <div class="img-meta">
+                  <div class="img-src">NASA.GOV</div>
+                  <div class="img-cap">
+                    Starship IFT-8 launch pad, Boca Chica
+                  </div>
+                </div>
+              </div>
+              <div class="img-card">
+                <div class="img-thumb g2"><div class="img-icon">🌿</div></div>
+                <div
+                  class="img-badge"
+                  style="background: rgba(61, 214, 140, 0.7); color: #0a2015"
+                >
+                  CLIMATE
+                </div>
+                <div class="img-meta">
+                  <div class="img-src">NATURE.COM</div>
+                  <div class="img-cap">Amazon deforestation rate drops 45%</div>
+                </div>
+              </div>
+              <div class="img-card">
+                <div class="img-thumb g3"><div class="img-icon">⚡</div></div>
+                <div
+                  class="img-badge"
+                  style="background: rgba(240, 98, 146, 0.7); color: #fff"
+                >
+                  TECH
+                </div>
+                <div class="img-meta">
+                  <div class="img-src">TESLA.COM</div>
+                  <div class="img-cap">Cybertruck production hits 1,000/wk</div>
+                </div>
+              </div>
+              <div class="img-card">
+                <div class="img-thumb g4"><div class="img-icon">🌊</div></div>
+                <div
+                  class="img-badge"
+                  style="background: rgba(56, 189, 248, 0.7); color: #03111a"
+                >
+                  SCIENCE
+                </div>
+                <div class="img-meta">
+                  <div class="img-src">NOAA.GOV</div>
+                  <div class="img-cap">Ocean temps reach record high 2025</div>
+                </div>
+              </div>
+              <div class="img-card">
+                <div class="img-thumb g5"><div class="img-icon">🧠</div></div>
+                <div
+                  class="img-badge"
+                  style="background: rgba(139, 92, 246, 0.7); color: #fff"
+                >
+                  AI
+                </div>
+                <div class="img-meta">
+                  <div class="img-src">OPENAI.COM</div>
+                  <div class="img-cap">GPT-5 multimodal benchmark results</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="padding: 16px 0 0" class="fu fu6">
+            <div class="stat-strip">
+              <div class="s-item s-sep">
+                <div class="s-n">2.4<span>k</span></div>
+                <div class="s-l">Searches</div>
+              </div>
+              <div class="s-item s-sep">
+                <div class="s-n">48</div>
+                <div class="s-l">Saved</div>
+              </div>
+              <div class="s-item">
+                <div class="s-n">12</div>
+                <div class="s-l">Topics</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec-head fu fu7">
+            <span class="sec-label">Recent chats</span
+            ><span class="sec-more">All →</span>
+          </div>
+          <div class="chat-list fu fu7">
+            <div class="chat-item" onclick="switchTab('chat')">
+              <div class="ci-ico" style="background: rgba(91, 91, 214, 0.15)">
+                🚀
+              </div>
+              <div class="ci-body">
+                <div class="ci-top">
+                  <span class="ci-title">SpaceX Starship update</span
+                  ><span class="ci-time">2m ago</span>
+                </div>
+                <div class="ci-prev">
+                  Flight 9 prep underway — booster catch system upgraded…
+                </div>
+                <div class="ci-tags">
+                  <span
+                    class="ci-tag"
+                    style="
+                      background: rgba(91, 91, 214, 0.12);
+                      color: var(--accent-ll);
+                    "
+                    >SPACE</span
+                  ><span
+                    class="ci-tag"
+                    style="
+                      background: rgba(61, 214, 140, 0.1);
+                      color: var(--green);
+                    "
+                    >LIVE</span
+                  >
+                </div>
+              </div>
+            </div>
+            <div class="chat-item" onclick="switchTab('chat')">
+              <div class="ci-ico" style="background: rgba(56, 189, 248, 0.12)">
+                📈
+              </div>
+              <div class="ci-body">
+                <div class="ci-top">
+                  <span class="ci-title">NVIDIA Q2 earnings</span
+                  ><span class="ci-time">1h ago</span>
+                </div>
+                <div class="ci-prev">
+                  Revenue beat estimates by 18%. Data center grew 427% YoY…
+                </div>
+                <div class="ci-tags">
+                  <span
+                    class="ci-tag"
+                    style="
+                      background: rgba(56, 189, 248, 0.1);
+                      color: var(--cyan);
+                    "
+                    >MARKETS</span
+                  >
+                </div>
+              </div>
+            </div>
+            <div class="chat-item" onclick="switchTab('chat')">
+              <div class="ci-ico" style="background: rgba(61, 214, 140, 0.1)">
+                🧬
+              </div>
+              <div class="ci-body">
+                <div class="ci-top">
+                  <span class="ci-title">CRISPR gene therapy</span
+                  ><span class="ci-time">3h ago</span>
+                </div>
+                <div class="ci-prev">
+                  Phase 3 results: 94% efficacy in sickle cell patients…
+                </div>
+                <div class="ci-tags">
+                  <span
+                    class="ci-tag"
+                    style="
+                      background: rgba(61, 214, 140, 0.1);
+                      color: var(--green);
+                    "
+                    >SCIENCE</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec-head fu fu8">
+            <span class="sec-label">Explore topics</span
+            ><span class="sec-more">More →</span>
+          </div>
+          <div class="topics-grid fu fu8">
+            <div class="topic-card" onclick="chipSearch(this)">
+              <span class="tc-ico">🌍</span>
+              <div class="tc-lbl">Environment</div>
+              <div class="tc-title">Net zero: who's on track?</div>
+              <div class="tc-meta">14 articles · today</div>
+            </div>
+            <div class="topic-card" onclick="chipSearch(this)">
+              <span class="tc-ico">🤖</span>
+              <div class="tc-lbl">AI &amp; Tech</div>
+              <div class="tc-title">Reasoning models reshape industry</div>
+              <div class="tc-meta">31 articles · 2h ago</div>
+            </div>
+            <div class="topic-card" onclick="chipSearch(this)">
+              <span class="tc-ico">💊</span>
+              <div class="tc-lbl">Health</div>
+              <div class="tc-title">Ozempic long-term results</div>
+              <div class="tc-meta">9 articles · yesterday</div>
+            </div>
+            <div class="topic-card" onclick="chipSearch(this)">
+              <span class="tc-ico">⚡</span>
+              <div class="tc-lbl">Energy</div>
+              <div class="tc-title">Solar hits price parity globally</div>
+              <div class="tc-meta">22 articles · today</div>
+            </div>
+          </div>
+
+          <div style="height: 20px"></div>
+        </div>
+      </div>
+
+      <!-- ════ CHAT PAGE ════ -->
+      <div class="page" id="page-chat">
+        <div class="chat-header">
+          <div class="chat-header-left">
+            <div class="chat-model-dot"></div>
+            <div>
+              <div class="chat-title-text" id="chatTitle">New conversation</div>
+              <div class="chat-sub">GPT-4o · web search enabled</div>
+            </div>
+          </div>
+          <div class="new-btn" onclick="newChat()">
+            <svg
+              width="11"
+              height="11"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+            >
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            NEW
+          </div>
+        </div>
+
+        <div class="messages" id="messages">
+          <div class="day-div">
+            <div class="dl"></div>
+            Today
+            <div class="dl"></div>
+          </div>
+          <!-- Welcome state -->
+          <div
+            id="welcomeState"
+            style="
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              flex: 1;
+              gap: 12px;
+              padding: 20px;
+              text-align: center;
+              opacity: 0.55;
+            "
+          >
+            <div style="font-size: 32px">✦</div>
+            <div
+              style="
+                font-family: var(--font-display);
+                font-size: 20px;
+                color: var(--text);
+                font-style: italic;
+              "
+            >
+              What would you like to explore?
+            </div>
+            <div
+              style="
+                font-family: var(--font-body);
+                font-size: 12.5px;
+                color: var(--text2);
+                line-height: 1.6;
+                max-width: 220px;
+              "
+            >
+              Ask anything — Lumiq searches the web and gives you rich,
+              structured answers in real time.
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-input-area">
+          <div class="chat-input-box">
+            <textarea
+              class="ci-input"
+              id="chatInput"
+              placeholder="Ask anything…"
+              rows="1"
+              onkeydown="chatKeyDown(event)"
+              oninput="
+                autoResize(this);
+                toggleSendBtn(this);
+              "
+            ></textarea>
+            <div class="ci-actions">
+              <div class="ci-btn" title="Attach">
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                >
+                  <path
+                    d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"
+                  />
+                </svg>
+              </div>
+              <div class="ci-btn" id="sendBtn" onclick="sendMessage()">
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                >
+                  <line x1="22" y1="2" x2="11" y2="13" />
+                  <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div class="ci-hint">Lumiq · Powered by OpenAI GPT-4o</div>
+        </div>
+      </div>
+
+      <!-- ════ SAVED PAGE ════ -->
+      <div class="page" id="page-saved">
+        <div class="placeholder-page">
+          <div class="ph-icon">🔖</div>
+          <div class="ph-title">Saved items</div>
+          <div class="ph-sub">
+            Bookmark answers, charts and articles to find them here.
+          </div>
+        </div>
+      </div>
+
+      <!-- ════ BOTTOM NAV ════ -->
+      <div class="bottomnav">
+        <div class="nav-i on" id="nav-home" onclick="switchTab('home')">
+          <svg
+            class="nav-ico"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+          >
+            <circle cx="11" cy="11" r="7" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+          <span class="nav-txt">SEARCH</span>
+        </div>
+        <div class="nav-i" id="nav-chat" onclick="switchTab('chat')">
+          <svg
+            class="nav-ico"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+          >
+            <path
+              d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+            />
+          </svg>
+          <span class="nav-txt">CHAT</span>
+        </div>
+        <div class="nav-i" id="nav-saved" onclick="switchTab('saved')">
+          <svg
+            class="nav-ico"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+          >
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+          </svg>
+          <span class="nav-txt">SAVED</span>
+        </div>
+      </div>
+
+      <!-- ════ THEME SHEET ════ -->
+      <div class="overlay" id="overlay" onclick="closeSheetOutside(event)">
+        <div class="sheet">
+          <div class="sheet-handle"></div>
+          <div class="sheet-title">Choose your theme</div>
+          <div class="sheet-sub">Each theme has its own font personality</div>
+          <div class="themes-grid" id="themesGrid"></div>
+          <div class="sheet-close" onclick="closeSheet()">Done</div>
+        </div>
+      </div>
+    </div>
+    <!-- end .app -->
+
+    <script>
+      // ═══════════════════════════════════════
+      //  CONFIG — add your key here
+      // ═══════════════════════════════════════
+      const OPENAI_API_KEY = "";
+      const OPENAI_MODEL = "gpt-5.2";
+
+      // ═══════════════════════════════════════
+      //  THEME DEFINITIONS
+      // ═══════════════════════════════════════
+      const THEMES = {
+        midnight: {
+          name: "Midnight",
+          fontDisplay: "Instrument Serif",
+          fontBody: "Geist",
+          fontMono: "Geist Mono",
+          fontChat: "Geist",
+          fontWeightBody: 300,
+          prevText: "Elegant & precise",
+          swatch: "linear-gradient(135deg,#08080c,#1a1a22)",
+          swatchBorder: "rgba(91,91,214,0.4)",
+          pipA: "#7b7bec",
+          pipB: "#38bdf8",
+          vars: {
+            "--bg": "#08080c",
+            "--bg2": "#0f0f14",
+            "--bg3": "#141419",
+            "--bg4": "#1a1a22",
+            "--surface": "#1f1f28",
+            "--surface2": "#262632",
+            "--surface3": "#2d2d3a",
+            "--border": "rgba(255,255,255,0.055)",
+            "--border2": "rgba(255,255,255,0.1)",
+            "--border3": "rgba(255,255,255,0.16)",
+            "--text": "#eeeef5",
+            "--text2": "#8888a8",
+            "--text3": "#44445a",
+            "--accent": "#5b5bd6",
+            "--accent-l": "#7b7bec",
+            "--accent-ll": "#a5a5f5",
+            "--accent-glow": "rgba(91,91,214,0.18)",
+            "--green": "#3dd68c",
+            "--amber": "#f5a623",
+            "--coral": "#f06292",
+            "--cyan": "#38bdf8",
+            "--msg-user-bg": "rgba(91,91,214,0.16)",
+            "--msg-user-border": "rgba(91,91,214,0.28)",
+            "--msg-ai-bg": "#141419",
+            "--msg-ai-border": "rgba(255,255,255,0.07)",
+          },
+        },
+        sand: {
+          name: "Sand",
+          fontDisplay: "DM Serif Display",
+          fontBody: "Epilogue",
+          fontMono: "IBM Plex Mono",
+          fontChat: "Epilogue",
+          fontWeightBody: 400,
+          prevText: "Warm & literary",
+          swatch: "linear-gradient(135deg,#f4efe4,#d8cfb8)",
+          swatchBorder: "rgba(160,98,42,0.3)",
+          pipA: "#c07838",
+          pipB: "#e8a060",
+          vars: {
+            "--bg": "#f4efe4",
+            "--bg2": "#ece6d8",
+            "--bg3": "#e4dcc8",
+            "--bg4": "#d8cfb8",
+            "--surface": "#cec4a8",
+            "--surface2": "#c0b490",
+            "--surface3": "#b4a47a",
+            "--border": "rgba(0,0,0,0.07)",
+            "--border2": "rgba(0,0,0,0.12)",
+            "--border3": "rgba(0,0,0,0.18)",
+            "--text": "#1c1810",
+            "--text2": "#5c5040",
+            "--text3": "#a09070",
+            "--accent": "#a0622a",
+            "--accent-l": "#c07838",
+            "--accent-ll": "#d88840",
+            "--accent-glow": "rgba(160,98,42,0.12)",
+            "--green": "#2e7d32",
+            "--amber": "#e65100",
+            "--coral": "#c62828",
+            "--cyan": "#01579b",
+            "--msg-user-bg": "rgba(160,98,42,0.12)",
+            "--msg-user-border": "rgba(160,98,42,0.25)",
+            "--msg-ai-bg": "#e4dcc8",
+            "--msg-ai-border": "rgba(0,0,0,0.08)",
+          },
+        },
+        sonar: {
+          name: "Sonar",
+          fontDisplay: "Fraunces",
+          fontBody: "Space Grotesk",
+          fontMono: "Space Mono",
+          fontChat: "Space Grotesk",
+          fontWeightBody: 300,
+          prevText: "Deep & technical",
+          swatch: "linear-gradient(135deg,#03101a,#0e2838)",
+          swatchBorder: "rgba(34,211,238,0.3)",
+          pipA: "#22d3ee",
+          pipB: "#2dd4bf",
+          vars: {
+            "--bg": "#03101a",
+            "--bg2": "#061520",
+            "--bg3": "#0a1e2c",
+            "--bg4": "#0e2838",
+            "--surface": "#122f42",
+            "--surface2": "#183850",
+            "--surface3": "#1e4260",
+            "--border": "rgba(34,211,238,0.07)",
+            "--border2": "rgba(34,211,238,0.14)",
+            "--border3": "rgba(34,211,238,0.22)",
+            "--text": "#cef4fc",
+            "--text2": "#5ab4c8",
+            "--text3": "#256878",
+            "--accent": "#0cb8d8",
+            "--accent-l": "#22d3ee",
+            "--accent-ll": "#67e8f9",
+            "--accent-glow": "rgba(34,211,238,0.15)",
+            "--green": "#2dd4bf",
+            "--amber": "#fbbf24",
+            "--coral": "#fb7185",
+            "--cyan": "#a5f3fc",
+            "--msg-user-bg": "rgba(34,211,238,0.1)",
+            "--msg-user-border": "rgba(34,211,238,0.25)",
+            "--msg-ai-bg": "#0a1e2c",
+            "--msg-ai-border": "rgba(34,211,238,0.08)",
+          },
+        },
+        beach: {
+          name: "Beach",
+          fontDisplay: "Libre Baskerville",
+          fontBody: "Sora",
+          fontMono: "JetBrains Mono",
+          fontChat: "Sora",
+          fontWeightBody: 300,
+          prevText: "Bright & breezy",
+          swatch: "linear-gradient(135deg,#fdf8ef,#fde8c0)",
+          swatchBorder: "rgba(216,96,16,0.35)",
+          pipA: "#e87828",
+          pipB: "#f09040",
+          vars: {
+            "--bg": "#fdf8ef",
+            "--bg2": "#f8f0e0",
+            "--bg3": "#f0e6d0",
+            "--bg4": "#e8dcc0",
+            "--surface": "#dfd0a8",
+            "--surface2": "#d4c090",
+            "--surface3": "#c8ae78",
+            "--border": "rgba(0,0,0,0.06)",
+            "--border2": "rgba(0,0,0,0.1)",
+            "--border3": "rgba(0,0,0,0.16)",
+            "--text": "#1a1200",
+            "--text2": "#6b5030",
+            "--text3": "#b09060",
+            "--accent": "#d86010",
+            "--accent-l": "#e87828",
+            "--accent-ll": "#f09040",
+            "--accent-glow": "rgba(216,96,16,0.12)",
+            "--green": "#2e7d32",
+            "--amber": "#bf360c",
+            "--coral": "#880e4f",
+            "--cyan": "#01579b",
+            "--msg-user-bg": "rgba(216,96,16,0.1)",
+            "--msg-user-border": "rgba(216,96,16,0.22)",
+            "--msg-ai-bg": "#f0e6d0",
+            "--msg-ai-border": "rgba(0,0,0,0.07)",
+          },
+        },
+        forest: {
+          name: "Forest",
+          fontDisplay: "Crimson Pro",
+          fontBody: "Space Grotesk",
+          fontMono: "JetBrains Mono",
+          fontChat: "Space Grotesk",
+          fontWeightBody: 300,
+          prevText: "Grounded & natural",
+          swatch: "linear-gradient(135deg,#050c05,#142614)",
+          swatchBorder: "rgba(61,214,140,0.25)",
+          pipA: "#3dd68c",
+          pipB: "#2dd4bf",
+          vars: {
+            "--bg": "#050c05",
+            "--bg2": "#091209",
+            "--bg3": "#0d1a0d",
+            "--bg4": "#112211",
+            "--surface": "#162a16",
+            "--surface2": "#1c3420",
+            "--surface3": "#223e28",
+            "--border": "rgba(61,214,140,0.07)",
+            "--border2": "rgba(61,214,140,0.13)",
+            "--border3": "rgba(61,214,140,0.2)",
+            "--text": "#d4f8e0",
+            "--text2": "#5aaa78",
+            "--text3": "#2a5a3a",
+            "--accent": "#22a858",
+            "--accent-l": "#3dd68c",
+            "--accent-ll": "#86efac",
+            "--accent-glow": "rgba(61,214,140,0.14)",
+            "--green": "#86efac",
+            "--amber": "#fbbf24",
+            "--coral": "#fb7185",
+            "--cyan": "#67e8f9",
+            "--msg-user-bg": "rgba(61,214,140,0.1)",
+            "--msg-user-border": "rgba(61,214,140,0.22)",
+            "--msg-ai-bg": "#0d1a0d",
+            "--msg-ai-border": "rgba(61,214,140,0.07)",
+          },
+        },
+        rose: {
+          name: "Rose",
+          fontDisplay: "Instrument Serif",
+          fontBody: "Epilogue",
+          fontMono: "IBM Plex Mono",
+          fontChat: "Epilogue",
+          fontWeightBody: 300,
+          prevText: "Soft & expressive",
+          swatch: "linear-gradient(135deg,#0e080e,#281828)",
+          swatchBorder: "rgba(240,98,146,0.3)",
+          pipA: "#f06292",
+          pipB: "#f9a8c8",
+          vars: {
+            "--bg": "#0e080e",
+            "--bg2": "#160c16",
+            "--bg3": "#1e101e",
+            "--bg4": "#261428",
+            "--surface": "#2e1830",
+            "--surface2": "#3a1e3c",
+            "--surface3": "#482448",
+            "--border": "rgba(240,98,146,0.07)",
+            "--border2": "rgba(240,98,146,0.13)",
+            "--border3": "rgba(240,98,146,0.2)",
+            "--text": "#fce8f4",
+            "--text2": "#c870a0",
+            "--text3": "#784860",
+            "--accent": "#d83878",
+            "--accent-l": "#f06292",
+            "--accent-ll": "#f9a8c8",
+            "--accent-glow": "rgba(240,98,146,0.14)",
+            "--green": "#86efac",
+            "--amber": "#fbbf24",
+            "--coral": "#fda4af",
+            "--cyan": "#67e8f9",
+            "--msg-user-bg": "rgba(240,98,146,0.1)",
+            "--msg-user-border": "rgba(240,98,146,0.25)",
+            "--msg-ai-bg": "#1e101e",
+            "--msg-ai-border": "rgba(240,98,146,0.08)",
+          },
+        },
+      };
+
+      let currentTheme = "midnight";
+      let conversationHistory = [];
+      let isStreaming = false;
+
+      // ── Clock ──
+      function updateClock() {
+        const d = new Date();
+        document.getElementById("clock").textContent =
+          d.getHours().toString().padStart(2, "0") +
+          ":" +
+          d.getMinutes().toString().padStart(2, "0");
+      }
+      updateClock();
+      setInterval(updateClock, 10000);
+
+      // ── Tab switching ──
+      function switchTab(tab) {
+        ["home", "chat", "saved"].forEach((t) => {
+          document
+            .getElementById("page-" + t)
+            .classList.toggle("active", t === tab);
+          document.getElementById("nav-" + t).classList.toggle("on", t === tab);
+        });
+        if (tab === "chat") setTimeout(scrollToBottom, 80);
+      }
+
+      // ── Theme ──
+      function buildThemeGrid() {
+        const g = document.getElementById("themesGrid");
+        g.innerHTML = "";
+        Object.entries(THEMES).forEach(([key, t]) => {
+          const el = document.createElement("div");
+          el.className = "th-opt" + (key === currentTheme ? " sel" : "");
+          el.innerHTML = `
+      <div class="th-swatch" style="background:${t.swatch};border:1px solid ${t.swatchBorder};"></div>
+      <div class="th-name">${t.name}</div>
+      <div class="th-font-name">${t.fontDisplay.split(",")[0]}</div>
+      <div class="th-prev" style="font-family:'${t.fontDisplay}',serif;font-style:italic;">${t.prevText}</div>`;
+          el.onclick = () => applyTheme(key);
+          g.appendChild(el);
+        });
+      }
+      function applyTheme(key) {
+        const t = THEMES[key];
+        if (!t) return;
+        currentTheme = key;
+        const r = document.documentElement;
+        Object.entries(t.vars).forEach(([k, v]) => r.style.setProperty(k, v));
+        r.style.setProperty(
+          "--font-display",
+          `'${t.fontDisplay}',Georgia,serif`,
+        );
+        r.style.setProperty("--font-body", `'${t.fontBody}',sans-serif`);
+        r.style.setProperty("--font-mono", `'${t.fontMono}',monospace`);
+        r.style.setProperty("--font-chat", `'${t.fontChat}',sans-serif`);
+        r.style.setProperty("--font-weight-body", t.fontWeightBody);
+        document.getElementById("themePip").style.background =
+          `linear-gradient(135deg,${t.pipA},${t.pipB})`;
+        buildThemeGrid();
+        setTimeout(closeSheet, 350);
+      }
+      function openSheet() {
+        buildThemeGrid();
+        document.getElementById("overlay").classList.add("open");
+      }
+      function closeSheet() {
+        document.getElementById("overlay").classList.remove("open");
+      }
+      function closeSheetOutside(e) {
+        if (e.target === document.getElementById("overlay")) closeSheet();
+      }
+
+      // ── Home search helpers ──
+      function homeSearchKey(e) {
+        if (e.key === "Enter") homeGoSearch();
+      }
+      function homeGoSearch() {
+        const q = document.getElementById("homeSearch").value.trim();
+        if (!q) return;
+        switchTab("chat");
+        setTimeout(() => {
+          document.getElementById("chatInput").value = q;
+          sendMessage();
+        }, 150);
+      }
+      function chipSearch(el) {
+        const txt = el.textContent.replace(/[🔥🚀🤖💹🧬🌏⚡🌍💊]/g, "").trim();
+        switchTab("chat");
+        setTimeout(() => {
+          document.getElementById("chatInput").value = txt;
+          sendMessage();
+        }, 150);
+      }
+
+      // ── Chat helpers ──
+      function autoResize(el) {
+        el.style.height = "auto";
+        el.style.height = Math.min(el.scrollHeight, 120) + "px";
+      }
+      function toggleSendBtn(el) {
+        const btn = document.getElementById("sendBtn");
+        btn.classList.toggle("active", el.value.trim().length > 0);
+      }
+      function chatKeyDown(e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      }
+      function scrollToBottom() {
+        const m = document.getElementById("messages");
+        m.scrollTop = m.scrollHeight;
+      }
+      function nowTime() {
+        const d = new Date();
+        return (
+          d.getHours().toString().padStart(2, "0") +
+          ":" +
+          d.getMinutes().toString().padStart(2, "0")
+        );
+      }
+      function esc(s) {
+        return s
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      // ── New chat ──
+      function newChat() {
+        conversationHistory = [];
+        const msgs = document.getElementById("messages");
+        msgs.innerHTML = `
+    <div class="day-div"><div class="dl"></div>Today<div class="dl"></div></div>
+    <div id="welcomeState" style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:12px;padding:20px;text-align:center;opacity:0.55;">
+      <div style="font-size:32px;">✦</div>
+      <div style="font-family:var(--font-display);font-size:20px;color:var(--text);font-style:italic;">What would you like to explore?</div>
+      <div style="font-family:var(--font-body);font-size:12.5px;color:var(--text2);line-height:1.6;max-width:220px;">Ask anything — Lumiq searches the web and gives you rich, structured answers in real time.</div>
+    </div>`;
+        document.getElementById("chatTitle").textContent = "New conversation";
+        document.getElementById("chatInput").value = "";
+        toggleSendBtn(document.getElementById("chatInput"));
+      }
+
+      // ── Append user message ──
+      function appendUserMessage(text) {
+        hideWelcome();
+        const msgs = document.getElementById("messages");
+
+        const group = document.createElement("div");
+        group.className = "msg-group user msg-in";
+
+        const row = document.createElement("div");
+        row.className = "msg-row";
+
+        const bubble = document.createElement("div");
+        bubble.className = "bubble user";
+        bubble.textContent = text;
+
+        row.appendChild(bubble);
+        group.appendChild(row);
+
+        const ts = document.createElement("div");
+        ts.className = "msg-ts";
+        ts.textContent = nowTime();
+
+        msgs.appendChild(group);
+        msgs.appendChild(ts);
+        scrollToBottom();
+      }
+
+      // ── Append AI message (streaming) ──
+      function appendAIMessage() {
+        const msgs = document.getElementById("messages");
+
+        const group = document.createElement("div");
+        group.className = "msg-group ai msg-in";
+        group.id = "streamingGroup";
+
+        const row = document.createElement("div");
+        row.className = "msg-row";
+
+        const av = document.createElement("div");
+        av.className = "ai-av";
+        av.innerHTML = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1.5L13 5V11L8 14.5L3 11V5L8 1.5Z" stroke="white" stroke-width="1.3" fill="none"/><circle cx="8" cy="8" r="2" fill="white"/></svg>`;
+
+        const bubble = document.createElement("div");
+        bubble.className = "bubble ai";
+        bubble.id = "streamingBubble";
+        bubble.innerHTML = `<div class="b-label"><div class="pulse"></div>LUMIQ · THINKING…</div><div class="b-body" id="streamingText"><span class="stream-cursor"></span></div>`;
+
+        row.appendChild(av);
+        row.appendChild(bubble);
+        group.appendChild(row);
+
+        msgs.appendChild(group);
+        scrollToBottom();
+        return document.getElementById("streamingText");
+      }
+
+      function finaliseAIMessage(textEl, fullText) {
+        // Remove cursor
+        const cursor = textEl.querySelector(".stream-cursor");
+        if (cursor) cursor.remove();
+
+        // Render markdown-lite: bold, code, line breaks
+        let html = esc(fullText)
+          .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+          .replace(
+            /`([^`]+)`/g,
+            '<code style="background:var(--surface2);padding:1px 5px;border-radius:4px;font-family:var(--font-mono);font-size:12px;">$1</code>',
+          )
+          .replace(/\n/g, "<br>");
+        textEl.innerHTML = html;
+
+        // Change label
+        const lbl = document
+          .getElementById("streamingGroup")
+          ?.querySelector(".b-label");
+        if (lbl) lbl.innerHTML = `<div class="pulse"></div>LUMIQ · ANSWER`;
+
+        // Add timestamp
+        const ts = document.createElement("div");
+        ts.className = "msg-ts";
+        ts.textContent = nowTime();
+        document.getElementById("messages").appendChild(ts);
+
+        // Remove IDs
+        document.getElementById("streamingGroup")?.removeAttribute("id");
+        document.getElementById("streamingBubble")?.removeAttribute("id");
+
+        scrollToBottom();
+      }
+
+      function hideWelcome() {
+        const w = document.getElementById("welcomeState");
+        if (w) w.remove();
+      }
+
+      // ── Send message ──
+      async function sendMessage() {
+        if (isStreaming) return;
+        const input = document.getElementById("chatInput");
+        const text = input.value.trim();
+        if (!text) return;
+
+        // Check key
+        if (OPENAI_API_KEY === "YOUR_OPENAI_API_KEY_HERE") {
+          alert(
+            "⚠️ Please set your OpenAI API key in the OPENAI_API_KEY constant at the top of the script.",
+          );
+          return;
+        }
+
+        input.value = "";
+        autoResize(input);
+        toggleSendBtn(input);
+
+        // Update title from first message
+        if (conversationHistory.length === 0) {
+          const shortTitle = text.length > 32 ? text.slice(0, 32) + "…" : text;
+          document.getElementById("chatTitle").textContent = shortTitle;
+        }
+
+        appendUserMessage(text);
+
+        conversationHistory.push({ role: "user", content: text });
+
+        isStreaming = true;
+        const textEl = appendAIMessage();
+        let fullResponse = "";
+
+        try {
+          const res = await fetch(
+            "https://api.openai.com/v1/chat/completions",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${OPENAI_API_KEY}`,
+              },
+              body: JSON.stringify({
+                model: OPENAI_MODEL,
+                stream: true,
+                messages: [
+                  {
+                    role: "system",
+                    content: `You are Lumiq, an intelligent AI search assistant. You provide clear, well-structured answers. Use **bold** for key terms. Keep responses informative but concise. Use line breaks between paragraphs. You can use bullet points with • character. Be helpful and direct.`,
+                  },
+                  ...conversationHistory,
+                ],
+              }),
+            },
+          );
+
+          if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(
+              errData.error?.message || `API error ${res.status}`,
+            );
+          }
+
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder();
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split("\n");
+
+            for (const line of lines) {
+              if (!line.startsWith("data:")) continue;
+              const data = line.slice(5).trim();
+              if (data === "[DONE]") break;
+              try {
+                const json = JSON.parse(data);
+                const delta = json.choices?.[0]?.delta?.content || "";
+                if (delta) {
+                  fullResponse += delta;
+                  // Stream to UI
+                  const cursor = textEl.querySelector(".stream-cursor");
+                  const escaped = esc(fullResponse)
+                    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                    .replace(
+                      /`([^`]+)`/g,
+                      '<code style="background:var(--surface2);padding:1px 5px;border-radius:4px;font-family:var(--font-mono);font-size:12px;">$1</code>',
+                    )
+                    .replace(/\n/g, "<br>");
+                  textEl.innerHTML =
+                    escaped + '<span class="stream-cursor"></span>';
+                  scrollToBottom();
+                }
+              } catch (e) {
+                /* skip parse errors */
+              }
+            }
+          }
+
+          conversationHistory.push({
+            role: "assistant",
+            content: fullResponse,
+          });
+          finaliseAIMessage(textEl, fullResponse);
+        } catch (err) {
+          textEl.innerHTML = `<span style="color:var(--coral);">⚠ ${esc(err.message)}</span>`;
+          const lbl = document
+            .getElementById("streamingGroup")
+            ?.querySelector(".b-label");
+          if (lbl)
+            lbl.innerHTML = `<span style="color:var(--coral);">ERROR</span>`;
+          const ts = document.createElement("div");
+          ts.className = "msg-ts";
+          ts.textContent = nowTime();
+          document.getElementById("messages").appendChild(ts);
+          document.getElementById("streamingGroup")?.removeAttribute("id");
+          scrollToBottom();
+        } finally {
+          isStreaming = false;
+        }
+      }
+    </script>
+  </body>
+</html>
